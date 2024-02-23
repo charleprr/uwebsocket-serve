@@ -64,18 +64,20 @@ const streamFile = (res, { filePath, size }) => {
     };
     const onDataChunk = (chunk) => {
         const arrayBufferChunk = toArrayBuffer(chunk);
-        const lastOffset = res.getWriteOffset();
-        const [ok, done] = res.tryEnd(arrayBufferChunk, size);
-        if (!done && !ok) {
-            readStream.pause();
-            res.onWritable((offset) => {
-                const [ok, done] = res.tryEnd(arrayBufferChunk.slice(offset - lastOffset), size);
-                if (!done && ok) {
-                    readStream.resume();
-                }
-                return ok;
-            });
-        }
+        res.cork(() => {
+            const lastOffset = res.getWriteOffset();
+            const [ok, done] = res.tryEnd(arrayBufferChunk, size);
+            if (!done && !ok) {
+                readStream.pause();
+                res.onWritable((offset) => {
+                    const [ok, done] = res.tryEnd(arrayBufferChunk.slice(offset - lastOffset), size);
+                    if (!done && ok) {
+                        readStream.resume();
+                    }
+                    return ok;
+                });
+            }
+        });
     };
     res.onAborted(destroyReadStream);
     readStream.on('data', onDataChunk).on('error', onError).on('end', destroyReadStream);
