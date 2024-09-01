@@ -1,5 +1,5 @@
 {
-    "name": "uwebsocket-serve",
+    "name": "@charlypoirier/uwebsocket-serve",
     "version": "1.0.9",
     "description": "Static file serving for uWebSockets.js",
     "main": "dist/index.js",
